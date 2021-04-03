@@ -142,8 +142,10 @@ donate_priority (struct thread *t)
   }
   intr_set_level (old_level);
 }
-bool thread_compare (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED){
-  return list_entry(a, struct thread, elem)->priority > list_entry(b, struct thread, elem)->priority;
+bool thread_compare (const struct list_elem *l1, const struct list_elem *l2, void *aux UNUSED){
+  int p1 = list_entry(l1, struct thread, elem)->priority;
+  int p2 = list_entry(l2, struct thread, elem)->priority;
+  return  p1 > p2;
 }
 void
 check_block (struct thread *t, void *aux UNUSED)

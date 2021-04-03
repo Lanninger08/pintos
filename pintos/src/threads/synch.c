@@ -43,9 +43,11 @@
      thread, if any). */
 
 bool
-lock_compare (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED)
+lock_compare (const struct list_elem *l1, const struct list_elem *l2, void *aux UNUSED)
 {
-  return list_entry (a, struct lock, elem)->highest_priority > list_entry (b, struct lock, elem)->highest_priority;
+  int p1 = list_entry (l1, struct lock, elem)->highest_priority;
+  int p2 = list_entry (l2, struct lock, elem)->highest_priority;
+  return p1 > p2;
 }
 void
 sema_init (struct semaphore *sema, unsigned value) 
@@ -348,11 +350,13 @@ cond_wait (struct condition *cond, struct lock *lock)
    interrupt handler. */
 /* cond sema comparation function */
 bool
-cond_compare (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED)
+cond_compare (const struct list_elem *l1, const struct list_elem *l2, void *aux UNUSED)
 {
-  struct semaphore_elem *sa = list_entry (a, struct semaphore_elem, elem);
-  struct semaphore_elem *sb = list_entry (b, struct semaphore_elem, elem);
-  return list_entry(list_front(&sa->semaphore.waiters), struct thread, elem)->priority > list_entry(list_front(&sb->semaphore.waiters), struct thread, elem)->priority;
+  // struct semaphore_elem *s1 = list_entry (l1, struct semaphore_elem, elem);
+  // struct semaphore_elem *s2 = list_entry (l2, struct semaphore_elem, elem);
+  int p1 = list_entry(list_front(&list_entry (l1, struct semaphore_elem, elem)->semaphore.waiters), struct thread, elem)->priority;
+  int p2 = list_entry(list_front(&list_entry (l2, struct semaphore_elem, elem)->semaphore.waiters), struct thread, elem)->priority;
+  return  p1> p2;
 }
 void
 cond_signal (struct condition *cond, struct lock *lock UNUSED)

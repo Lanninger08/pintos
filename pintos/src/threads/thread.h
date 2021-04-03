@@ -120,7 +120,7 @@ void update_priority (struct thread *t);
 void donate_priority (struct thread *t);
 void hold_lock(struct lock *lock);
 void check_block (struct thread *t, void *aux UNUSED);
-bool thread_compare (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED);
+bool thread_compare (const struct list_elem *l1, const struct list_elem *l2, void *aux UNUSED);
 void thread_mlfqs_increase_recent_cpu_by_one (void);
 void thread_mlfqs_update_load_avg_and_recent_cpu (void);
 void thread_init (void);
