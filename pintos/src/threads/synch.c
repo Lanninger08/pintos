@@ -42,13 +42,13 @@
    - up or "V": increment the value (and wake up one waiting
      thread, if any). */
 
-bool
-lock_compare (const struct list_elem *l1, const struct list_elem *l2, void *aux UNUSED)
-{
-  int p1 = list_entry (l1, struct lock, elem)->highest_priority;
-  int p2 = list_entry (l2, struct lock, elem)->highest_priority;
-  return p1 > p2;
-}
+// bool
+// lock_compare (const struct list_elem *l1, const struct list_elem *l2, void *aux UNUSED)
+// {
+//   int p1 = list_entry (l1, struct lock, elem)->highest_priority;
+//   int p2 = list_entry (l2, struct lock, elem)->highest_priority;
+//   return p1 > p2;
+// }
 void
 sema_init (struct semaphore *sema, unsigned value) 
 {
