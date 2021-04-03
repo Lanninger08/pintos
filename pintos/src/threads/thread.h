@@ -161,9 +161,10 @@ void hold_lock(struct lock *lock);
 void remove_lock (struct lock *lock);
 
 
-void thread_mlfqs_update_priority (struct thread *t);
-void thread_mlfqs_increase_recent_cpu_by_one (void);
-void thread_mlfqs_update_load_avg_and_recent_cpu (void);
+void mlfqs_update_priority (struct thread *t);
+void increase_recent_cpu (void);
+void mlfqs_update_load_avg (void);
+void mlfqs_update_recent_cpu (void);
 
 #endif /* threads/thread.h */
 

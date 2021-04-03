@@ -180,11 +180,15 @@ timer_interrupt (struct intr_frame *args UNUSED)
   thread_foreach (check_sleep, NULL);
   
   if (thread_mlfqs){
-    thread_mlfqs_increase_recent_cpu_by_one ();
-    if (ticks % TIMER_FREQ == 0)
-      thread_mlfqs_update_load_avg_and_recent_cpu ();
-    else if (ticks % 4 == 0)
-      thread_mlfqs_update_priority (thread_current ());
+    increase_recent_cpu ();
+    if (ticks % TIMER_FREQ == 0){
+      // thread_mlfqs_update_load_avg_and_recent_cpu ();
+      mlfqs_update_load_avg ();
+      mlfqs_update_recent_cpu ();
+    }
+    else if (ticks % 4 == 0){
+      mlfqs_update_priority (thread_current ());
+    }
   }
 }
 

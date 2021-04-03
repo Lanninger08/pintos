@@ -89,7 +89,8 @@ static tid_t allocate_tid(void);
 /* Let thread hold a lock */
 /* Remove a lock. */
 
-int find_max_priority (struct thread *t){
+int find_max_priority(struct thread *t)
+{
   struct list_elem *e;
   int max_priority = t->original_priority;
 
@@ -111,21 +112,6 @@ int find_max_priority (struct thread *t){
 void update_priority(struct thread *t)
 {
   enum intr_level old_level = intr_disable();
-  // struct list_elem *e;
-
-  // if (!list_empty(&t->lock_list))
-  // {
-  //   int lock_priority;
-  //   for (e = list_begin(&t->lock_list); e != list_end(&t->lock_list); e = list_next(e))
-  //   {
-  //     lock_priority = list_entry(e, struct lock, elem)->highest_priority;
-  //     if (new_priority < lock_priority)
-  //     {
-  //       new_priority = lock_priority;
-  //     }
-  //   }
-  // }
-
   t->priority = find_max_priority(t);
   intr_set_level(old_level);
 }
@@ -205,7 +191,7 @@ void check_sleep(struct thread *t, void *aux UNUSED)
   }
 }
 
-void thread_mlfqs_increase_recent_cpu_by_one(void)
+void increase_recent_cpu(void)
 {
   ASSERT(thread_mlfqs);
   ASSERT(intr_context());
@@ -234,7 +220,35 @@ void thread_mlfqs_update_load_avg_and_recent_cpu(void)
     if (t != idle_thread)
     {
       t->recent_cpu = FP_ADD_MIX(FP_MULT(FP_DIV(FP_MULT_MIX(load_avg, 2), FP_ADD_MIX(FP_MULT_MIX(load_avg, 2), 1)), t->recent_cpu), t->nice);
-      thread_mlfqs_update_priority(t);
+      mlfqs_update_priority(t);
+    }
+  }
+}
+
+void mlfqs_update_load_avg(void)
+{
+  ASSERT(thread_mlfqs);
+  ASSERT(intr_context());
+
+  size_t ready_threads = list_size(&ready_list);
+  if (thread_current() != idle_thread)
+    ready_threads++;
+  load_avg = FP_ADD(FP_DIV_MIX(FP_MULT_MIX(load_avg, 59), 60), FP_DIV_MIX(FP_CONST(ready_threads), 60));
+}
+
+void mlfqs_update_recent_cpu(void)
+{
+  ASSERT(thread_mlfqs);
+  ASSERT(intr_context());
+  struct thread *t;
+  struct list_elem *e = list_begin(&all_list);
+  for (; e != list_end(&all_list); e = list_next(e))
+  {
+    t = list_entry(e, struct thread, allelem);
+    if (t != idle_thread)
+    {
+      t->recent_cpu = FP_ADD_MIX(FP_MULT(FP_DIV(FP_MULT_MIX(load_avg, 2), FP_ADD_MIX(FP_MULT_MIX(load_avg, 2), 1)), t->recent_cpu), t->nice);
+      mlfqs_update_priority(t);
     }
   }
 }
@@ -522,7 +536,7 @@ void thread_set_priority(int new_priority)
 
   intr_set_level(old_level);
 }
-void thread_mlfqs_update_priority(struct thread *t)
+void mlfqs_update_priority(struct thread *t)
 {
   if (t == idle_thread)
     return;
@@ -545,7 +559,7 @@ int thread_get_priority(void)
 void thread_set_nice(int nice UNUSED)
 {
   thread_current()->nice = nice;
-  thread_mlfqs_update_priority(thread_current());
+  mlfqs_update_priority(thread_current());
   thread_yield();
 }
 
