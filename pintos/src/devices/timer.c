@@ -96,7 +96,7 @@ timer_sleep (int64_t ticks)
   ASSERT (intr_get_level () == INTR_ON);
   enum intr_level old_level = intr_disable ();
   struct thread *current_thread = thread_current ();
-  current_thread->ticks_blocked = ticks;
+  current_thread->sleep_time = ticks;
   thread_block ();
   intr_set_level (old_level);
 }
@@ -185,7 +185,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
     else if (ticks % 4 == 0)
       thread_mlfqs_update_priority (thread_current ());
   }
-  thread_foreach (blocked_thread_check, NULL);
+  thread_foreach (check_block, NULL);
   intr_set_level (old_level);
   thread_tick ();
 }

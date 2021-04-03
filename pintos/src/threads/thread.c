@@ -210,7 +210,7 @@ thread_create (const char *name, int priority,
   sf->ebp = 0;
 
   intr_set_level (old_level);
-  t->ticks_blocked = 0;
+  t->sleep_time = 0;
 
   /* Add to run queue. */
   thread_unblock (t);
@@ -619,12 +619,12 @@ uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 
 /* Check the blocked thread */
 void
-blocked_thread_check (struct thread *t, void *aux UNUSED)
+check_block (struct thread *t, void *aux UNUSED)
 {
-  if (t->status == THREAD_BLOCKED && t->ticks_blocked > 0)
+  if (t->status == THREAD_BLOCKED && t->sleep_time > 0)
   {
-      t->ticks_blocked--;
-      if (t->ticks_blocked == 0)
+      t->sleep_time--;
+      if (t->sleep_time == 0)
       {
           thread_unblock(t);
       }
