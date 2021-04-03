@@ -124,11 +124,12 @@ hold_lock(struct lock *lock)
   enum intr_level old_level = intr_disable ();
   list_push_back(&thread_current ()->lock_list, &lock->elem);
 
+  /*
   if (lock->highest_priority > thread_current ()->priority)
   {
     thread_current ()->priority = lock->highest_priority;
     thread_yield ();
-  }
+  }*/
 
   intr_set_level (old_level);
 }
