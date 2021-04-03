@@ -153,15 +153,15 @@ bool thread_compare (const struct list_elem *l1, const struct list_elem *l2, voi
   return  p1 > p2;
 }
 void
-check_block (struct thread *t, void *aux UNUSED)
+check_sleep (struct thread *t, void *aux UNUSED)
 {
-  if (t->status == THREAD_BLOCKED)
+  if (t->status == THREAD_SLEEPING)
   {
     if(t->sleep_time > 0){
       t->sleep_time--;
       if (t->sleep_time == 0)
       {
-          thread_unblock(t);
+          thread_wakeup(t);
       }
     }
   }
@@ -362,6 +362,32 @@ thread_unblock (struct thread *t)
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
   //list_push_back (&ready_list, &t->elem);
+  list_insert_ordered (&ready_list, &t->elem, (list_less_func *) &thread_compare, NULL);
+  t->status = THREAD_READY;
+  intr_set_level (old_level);
+}
+
+
+void
+thread_sleep (void) 
+{
+  ASSERT (!intr_context ());
+  ASSERT (intr_get_level () == INTR_OFF);
+
+  thread_current ()->status = THREAD_SLEEPING;
+  schedule ();
+}
+
+
+void
+thread_wakeup (struct thread *t) 
+{
+  enum intr_level old_level;
+
+  ASSERT (is_thread (t));
+
+  old_level = intr_disable ();
+  ASSERT (t->status == THREAD_SLEEPING);
   list_insert_ordered (&ready_list, &t->elem, (list_less_func *) &thread_compare, NULL);
   t->status = THREAD_READY;
   intr_set_level (old_level);

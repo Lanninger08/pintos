@@ -93,15 +93,12 @@ timer_sleep (int64_t ticks)
   {
     return;
   }
-  //int64_t start = timer_ticks ();
 
   ASSERT (intr_get_level () == INTR_ON);
   enum intr_level old_level = intr_disable ();
   thread_current ()->sleep_time = ticks;
-  thread_block ();
+  thread_sleep ();
   intr_set_level (old_level);
-  //while (timer_elapsed (start) < ticks) 
-    //thread_yield ();
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -180,7 +177,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
-  thread_foreach (check_block, NULL);
+  thread_foreach (check_sleep, NULL);
   
   if (thread_mlfqs){
     thread_mlfqs_increase_recent_cpu_by_one ();

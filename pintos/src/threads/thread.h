@@ -12,7 +12,8 @@ enum thread_status
     THREAD_RUNNING,     /* Running thread. */
     THREAD_READY,       /* Not running but ready to run. */
     THREAD_BLOCKED,     /* Waiting for an event to trigger. */
-    THREAD_DYING        /* About to be destroyed. */
+    THREAD_DYING,       /* About to be destroyed. */
+    THREAD_SLEEPING
   };
 
 /* Thread identifier type.
@@ -97,8 +98,8 @@ struct thread
     struct list_elem elem;              /* List element. */
     int64_t sleep_time;
     int original_priority;
-    struct list lock_list;
     struct lock *waiting; 
+    struct list lock_list;
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
@@ -119,7 +120,7 @@ void remove_lock (struct lock *lock);
 void update_priority (struct thread *t);
 void donate_priority (struct thread *t);
 void hold_lock(struct lock *lock);
-void check_block (struct thread *t, void *aux UNUSED);
+void check_sleep (struct thread *t, void *aux UNUSED);
 bool thread_compare (const struct list_elem *l1, const struct list_elem *l2, void *aux UNUSED);
 void thread_mlfqs_increase_recent_cpu_by_one (void);
 void thread_mlfqs_update_load_avg_and_recent_cpu (void);
@@ -134,6 +135,8 @@ tid_t thread_create (const char *name, int priority, thread_func *, void *);
 
 void thread_block (void);
 void thread_unblock (struct thread *);
+void thread_sleep (void);
+void thread_wakeup (struct thread *);
 
 struct thread *thread_current (void);
 tid_t thread_tid (void);
