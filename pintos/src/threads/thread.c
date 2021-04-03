@@ -97,6 +97,7 @@ int find_max_priority(struct thread *t)
   if (!list_empty(&t->lock_list))
   {
     int lock_priority;
+    // tranverse all the lock that thread t acquires and find the maximum lock priority
     for (e = list_begin(&t->lock_list); e != list_end(&t->lock_list); e = list_next(e))
     {
       lock_priority = list_entry(e, struct lock, elem)->highest_priority;
@@ -112,6 +113,7 @@ int find_max_priority(struct thread *t)
 void update_priority(struct thread *t)
 {
   enum intr_level old_level = intr_disable();
+  // the new priority is the maximum priority among locks priority and original priority
   t->priority = find_max_priority(t);
   intr_set_level(old_level);
 }
@@ -120,6 +122,7 @@ void remove_lock(struct lock *lock)
 {
   enum intr_level old_level = intr_disable();
   list_remove(&lock->elem);
+  // the priority of the thread may change due to the release of the lock
   update_priority(thread_current());
   intr_set_level(old_level);
 }
@@ -128,14 +131,6 @@ void hold_lock(struct lock *lock)
 {
   enum intr_level old_level = intr_disable();
   list_push_back(&thread_current()->lock_list, &lock->elem);
-
-  /*
-  if (lock->highest_priority > thread_current ()->priority)
-  {
-    thread_current ()->priority = lock->highest_priority;
-    thread_yield ();
-  }*/
-
   intr_set_level(old_level);
 }
 
@@ -146,6 +141,7 @@ void donate_nest(struct lock *lock, struct thread *current_thread)
   {
     if (current_thread->priority > lock0->highest_priority)
     {
+      // change the priority of the thread by changing the priority of the lock
       lock0->highest_priority = current_thread->priority;
       donate_priority(lock0->holder);
       lock0 = lock0->holder->waiting;
@@ -164,6 +160,7 @@ void donate_priority(struct thread *t)
 
   if (t->status == THREAD_READY)
   {
+    // rearrange the ready list after changing the priority of thread t
     list_sort(&ready_list, thread_compare, NULL);
   }
   intr_set_level(old_level);
@@ -210,6 +207,7 @@ void mlfqs_update_load_avg(void)
   size_t ready_threads = list_size(&ready_list);
   if (thread_current() != idle_thread)
     ready_threads++;
+  // load_avg=（59/60）*load_avg+（1/60）*ready_threads
   load_avg = FP_ADD(FP_DIV_MIX(FP_MULT_MIX(load_avg, 59), 60), FP_DIV_MIX(FP_CONST(ready_threads), 60));
 }
 
@@ -224,6 +222,7 @@ void mlfqs_update_recent_cpu(void)
     t = list_entry(e, struct thread, allelem);
     if (t != idle_thread)
     {
+      // recent_cpu = (2*load_avg)/(2*load_avg + 1) * recent_cpu + nice.
       t->recent_cpu = FP_ADD_MIX(FP_MULT(FP_DIV(FP_MULT_MIX(load_avg, 2), FP_ADD_MIX(FP_MULT_MIX(load_avg, 2), 1)), t->recent_cpu), t->nice);
       mlfqs_update_priority(t);
     }
@@ -505,6 +504,7 @@ void thread_set_priority(int new_priority)
   int old_priority = current_thread->priority;
   current_thread->original_priority = new_priority;
 
+  // if the list is empty or the new priority too high
   if (list_empty(&current_thread->lock_list) || new_priority > old_priority)
   {
     current_thread->priority = new_priority;
@@ -513,6 +513,7 @@ void thread_set_priority(int new_priority)
 
   intr_set_level(old_level);
 }
+
 void mlfqs_update_priority(struct thread *t)
 {
   if (t == idle_thread)
@@ -521,7 +522,9 @@ void mlfqs_update_priority(struct thread *t)
   ASSERT(thread_mlfqs);
   ASSERT(t != idle_thread);
 
+  // priority = PRI_MAX - (recent_cpu / 4) - (nice * 2).
   t->priority = FP_INT_PART(FP_SUB_MIX(FP_SUB(FP_CONST(PRI_MAX), FP_DIV_MIX(t->recent_cpu, 4)), 2 * t->nice));
+  // in a reasonable range
   if(t->priority < PRI_MIN){
     t->priority = PRI_MIN;
   }
@@ -654,9 +657,11 @@ init_thread(struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *)t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
+
   t->original_priority = priority;
-  list_init(&t->lock_list);
   t->waiting = NULL;
+  list_init(&t->lock_list);
+
   t->nice = 0;
   t->recent_cpu = FP_CONST(0);
 

@@ -189,17 +189,17 @@ void lock_init(struct lock *lock)
    we need to sleep. */
 void lock_acquire(struct lock *lock)
 {
-  struct thread *current_thread = thread_current();
-  enum intr_level old_level;
-
   ASSERT(lock != NULL);
   ASSERT(!intr_context());
   ASSERT(!lock_held_by_current_thread(lock));
-
+  
+  struct thread *current_thread = thread_current();
+  
   struct lock *lock0;
 
   if (!thread_mlfqs)
   {
+    // if the lock is held by other thread, donate if necessary
     if (lock->holder != NULL)
     {
       current_thread->waiting = lock;
@@ -209,8 +209,9 @@ void lock_acquire(struct lock *lock)
 
   sema_down(&lock->semaphore);
 
-  old_level = intr_disable();
+  enum intr_level old_level = intr_disable();
 
+  // when the thread wake up, it holds the lock
   current_thread = thread_current();
   if (!thread_mlfqs)
   {
@@ -331,8 +332,6 @@ void cond_wait(struct condition *cond, struct lock *lock)
 /* cond sema comparation function */
 bool cond_compare(const struct list_elem *l1, const struct list_elem *l2, void *aux UNUSED)
 {
-  // struct semaphore_elem *s1 = list_entry (l1, struct semaphore_elem, elem);
-  // struct semaphore_elem *s2 = list_entry (l2, struct semaphore_elem, elem);
   int p1 = list_entry(list_front(&list_entry(l1, struct semaphore_elem, elem)->semaphore.waiters), struct thread, elem)->priority;
   int p2 = list_entry(list_front(&list_entry(l2, struct semaphore_elem, elem)->semaphore.waiters), struct thread, elem)->priority;
   return p1 > p2;

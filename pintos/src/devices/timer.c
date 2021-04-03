@@ -89,16 +89,16 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
-  /*
+  // alarm-zero
   if (ticks <= 0)
   {
     return;
   }
-  */
 
   ASSERT (intr_get_level () == INTR_ON);
   enum intr_level old_level = intr_disable ();
   thread_current ()->sleep_time = ticks;
+  // let the thread sleep...
   thread_sleep ();
   intr_set_level (old_level);
 }
@@ -179,6 +179,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
+  // tranverse all threads and wake up some threads
   thread_foreach (check_sleep, NULL);
   
   if (thread_mlfqs){
