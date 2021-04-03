@@ -182,7 +182,6 @@ timer_interrupt (struct intr_frame *args UNUSED)
   if (thread_mlfqs){
     increase_recent_cpu ();
     if (ticks % TIMER_FREQ == 0){
-      // thread_mlfqs_update_load_avg_and_recent_cpu ();
       mlfqs_update_load_avg ();
       mlfqs_update_recent_cpu ();
     }

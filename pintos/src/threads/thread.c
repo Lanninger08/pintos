@@ -202,29 +202,6 @@ void increase_recent_cpu(void)
   current_thread->recent_cpu = FP_ADD_MIX(current_thread->recent_cpu, 1);
 }
 
-void thread_mlfqs_update_load_avg_and_recent_cpu(void)
-{
-  ASSERT(thread_mlfqs);
-  ASSERT(intr_context());
-
-  size_t ready_threads = list_size(&ready_list);
-  if (thread_current() != idle_thread)
-    ready_threads++;
-  load_avg = FP_ADD(FP_DIV_MIX(FP_MULT_MIX(load_avg, 59), 60), FP_DIV_MIX(FP_CONST(ready_threads), 60));
-
-  struct thread *t;
-  struct list_elem *e = list_begin(&all_list);
-  for (; e != list_end(&all_list); e = list_next(e))
-  {
-    t = list_entry(e, struct thread, allelem);
-    if (t != idle_thread)
-    {
-      t->recent_cpu = FP_ADD_MIX(FP_MULT(FP_DIV(FP_MULT_MIX(load_avg, 2), FP_ADD_MIX(FP_MULT_MIX(load_avg, 2), 1)), t->recent_cpu), t->nice);
-      mlfqs_update_priority(t);
-    }
-  }
-}
-
 void mlfqs_update_load_avg(void)
 {
   ASSERT(thread_mlfqs);
@@ -241,8 +218,8 @@ void mlfqs_update_recent_cpu(void)
   ASSERT(thread_mlfqs);
   ASSERT(intr_context());
   struct thread *t;
-  struct list_elem *e = list_begin(&all_list);
-  for (; e != list_end(&all_list); e = list_next(e))
+  struct list_elem *e;
+  for (e = list_begin(&all_list); e != list_end(&all_list); e = list_next(e))
   {
     t = list_entry(e, struct thread, allelem);
     if (t != idle_thread)
@@ -545,8 +522,12 @@ void mlfqs_update_priority(struct thread *t)
   ASSERT(t != idle_thread);
 
   t->priority = FP_INT_PART(FP_SUB_MIX(FP_SUB(FP_CONST(PRI_MAX), FP_DIV_MIX(t->recent_cpu, 4)), 2 * t->nice));
-  t->priority = t->priority < PRI_MIN ? PRI_MIN : t->priority;
-  t->priority = t->priority > PRI_MAX ? PRI_MAX : t->priority;
+  if(t->priority < PRI_MIN){
+    t->priority = PRI_MIN;
+  }
+  if(t->priority>PRI_MAX){
+    t->priority = PRI_MAX;
+  }
 }
 
 /* Returns the current thread's priority. */
