@@ -115,15 +115,6 @@ struct thread
    Controlled by kernel command-line option "-o mlfqs". */
 extern bool thread_mlfqs;
 
-void thread_mlfqs_update_priority (struct thread *t);
-void remove_lock (struct lock *lock);
-void update_priority (struct thread *t);
-void donate_priority (struct thread *t);
-void hold_lock(struct lock *lock);
-void check_sleep (struct thread *t, void *aux UNUSED);
-bool thread_compare (const struct list_elem *l1, const struct list_elem *l2, void *aux UNUSED);
-void thread_mlfqs_increase_recent_cpu_by_one (void);
-void thread_mlfqs_update_load_avg_and_recent_cpu (void);
 void thread_init (void);
 void thread_start (void);
 
@@ -135,6 +126,7 @@ tid_t thread_create (const char *name, int priority, thread_func *, void *);
 
 void thread_block (void);
 void thread_unblock (struct thread *);
+// thread sleep & wake up
 void thread_sleep (void);
 void thread_wakeup (struct thread *);
 
@@ -156,6 +148,21 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+// new functions
+void check_sleep (struct thread *t, void *aux UNUSED);
+bool thread_compare (const struct list_elem *l1, const struct list_elem *l2, void *aux UNUSED);
+
+void donate_nest (struct lock *lock, struct thread *current_thread);
+void donate_priority (struct thread *t);
+void update_priority (struct thread *t);
+void hold_lock(struct lock *lock);
+void remove_lock (struct lock *lock);
+
+
+void thread_mlfqs_update_priority (struct thread *t);
+void thread_mlfqs_increase_recent_cpu_by_one (void);
+void thread_mlfqs_update_load_avg_and_recent_cpu (void);
 
 #endif /* threads/thread.h */
 
