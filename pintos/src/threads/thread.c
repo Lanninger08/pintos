@@ -88,11 +88,10 @@ static tid_t allocate_tid(void);
 /* Check the blocked thread */
 /* Let thread hold a lock */
 /* Remove a lock. */
-void update_priority(struct thread *t)
-{
-  enum intr_level old_level = intr_disable();
-  int new_priority = t->original_priority;
+
+int find_max_priority (struct thread *t){
   struct list_elem *e;
+  int max_priority = t->original_priority;
 
   if (!list_empty(&t->lock_list))
   {
@@ -100,14 +99,34 @@ void update_priority(struct thread *t)
     for (e = list_begin(&t->lock_list); e != list_end(&t->lock_list); e = list_next(e))
     {
       lock_priority = list_entry(e, struct lock, elem)->highest_priority;
-      if (new_priority < lock_priority)
+      if (max_priority < lock_priority)
       {
-        new_priority = lock_priority;
+        max_priority = lock_priority;
       }
     }
   }
+  return max_priority;
+}
 
-  t->priority = new_priority;
+void update_priority(struct thread *t)
+{
+  enum intr_level old_level = intr_disable();
+  // struct list_elem *e;
+
+  // if (!list_empty(&t->lock_list))
+  // {
+  //   int lock_priority;
+  //   for (e = list_begin(&t->lock_list); e != list_end(&t->lock_list); e = list_next(e))
+  //   {
+  //     lock_priority = list_entry(e, struct lock, elem)->highest_priority;
+  //     if (new_priority < lock_priority)
+  //     {
+  //       new_priority = lock_priority;
+  //     }
+  //   }
+  // }
+
+  t->priority = find_max_priority(t);
   intr_set_level(old_level);
 }
 
@@ -134,21 +153,22 @@ void hold_lock(struct lock *lock)
   intr_set_level(old_level);
 }
 
-void donate_nest (struct lock *lock, struct thread *current_thread){
+void donate_nest(struct lock *lock, struct thread *current_thread)
+{
   struct lock *lock0 = lock;
-      while (lock0)
-      {
-        if (current_thread->priority > lock0->highest_priority)
-        {
-          lock0->highest_priority = current_thread->priority;
-          donate_priority(lock0->holder);
-          lock0 = lock0->holder->waiting;
-        }
-        else
-        {
-          break;
-        }
-      }
+  while (lock0)
+  {
+    if (current_thread->priority > lock0->highest_priority)
+    {
+      lock0->highest_priority = current_thread->priority;
+      donate_priority(lock0->holder);
+      lock0 = lock0->holder->waiting;
+    }
+    else
+    {
+      break;
+    }
+  }
 }
 
 void donate_priority(struct thread *t)
@@ -332,7 +352,7 @@ tid_t thread_create(const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock(t);
-    thread_yield();
+  thread_yield();
 
   return tid;
 }

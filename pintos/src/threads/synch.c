@@ -204,20 +204,6 @@ void lock_acquire(struct lock *lock)
     {
       current_thread->waiting = lock;
       donate_nest (lock, current_thread);
-      // lock0 = lock;
-      // while (lock0)
-      // {
-      //   if (current_thread->priority > lock0->highest_priority)
-      //   {
-      //     lock0->highest_priority = current_thread->priority;
-      //     donate_priority(lock0->holder);
-      //     lock0 = lock0->holder->waiting;
-      //   }
-      //   else
-      //   {
-      //     break;
-      //   }
-      // }
     }
   }
 
