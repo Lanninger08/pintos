@@ -90,10 +90,15 @@ struct thread
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
+    int nice;
+    fixed_t recent_cpu;
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
-    int64_t sleep_time;
+    int64_t still_sleep;
+    int base_priority;
+    struct list locks;
+    struct lock *lock_waiting; 
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
@@ -109,6 +114,15 @@ struct thread
    Controlled by kernel command-line option "-o mlfqs". */
 extern bool thread_mlfqs;
 
+void thread_mlfqs_update_priority (struct thread *t);
+void thread_remove_lock (struct lock *lock);
+void thread_update_priority (struct thread *t);
+void thread_donate_priority (struct thread *t);
+void thread_hold_the_lock(struct lock *lock);
+void wake_up (struct thread *t, void *aux UNUSED);
+bool thread_cmp_priority (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED);
+void thread_mlfqs_increase_recent_cpu_by_one (void);
+void thread_mlfqs_update_load_avg_and_recent_cpu (void);
 void thread_init (void);
 void thread_start (void);
 
@@ -140,7 +154,5 @@ void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
-// add new functions
-void check_block(struct thread *t, void *aux);
-
 #endif /* threads/thread.h */
+
