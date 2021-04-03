@@ -155,7 +155,7 @@ bool thread_compare (const struct list_elem *l1, const struct list_elem *l2, voi
 
 void donate_nest (struct lock *lock, struct thread *current_thread);
 void donate_priority (struct thread *t);
-void find_max_priority (int original_priority, struct thread *t);
+int find_max_priority (struct thread *t);
 void update_priority (struct thread *t);
 void hold_lock(struct lock *lock);
 void remove_lock (struct lock *lock);
