@@ -102,7 +102,7 @@ update_priority (struct thread *t)
     // lock_priority = list_entry (list_front (&t->lock_list), struct lock, elem)->highest_priority;
     // if (lock_priority > new_priority)
     //   new_priority = lock_priority;
-    for (e = list_begin (&all_list); e != list_end (&all_list);e = list_next (e))
+    for (e = list_begin (&t->lock_list); e != list_end (&t->lock_list);e = list_next (e))
     {
       lock_priority = list_entry (e, struct lock, elem)->highest_priority;
       if(new_priority<lock_priority){
